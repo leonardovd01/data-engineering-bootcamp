@@ -30,28 +30,6 @@ POSTGRES_SCHEMA_NAME = "users_purchase_data"
 POSTGRES_TABLE_NAME = "user_purchase"
 
 
-def ingest_data_from_s3(
-    s3_bucket: str,
-    s3_key: str,
-    postgres_table: str,
-    aws_conn_id: str = "aws_default",
-    postgres_conn_id: str = "postgres_default",
-
-):
-    """Ingest data from an S3 location into a postgres table.
-    Args:
-        s3_bucket (str): Name of the s3 bucket.
-        s3_key (str): Name of the s3 key.
-        postgres_table (str): Name of the postgres table.
-        aws_conn_id (str): Name of the aws connection ID.
-        postgres_conn_id (str): Name of the postgres connection ID.
-    """
-    s3_hook = S3Hook(aws_conn_id=aws_conn_id)
-    psql_hook = PostgresHook(postgres_conn_id)
-    local_filename = s3_hook.download_file(key=s3_key, bucket_name=s3_bucket)
-    psql_hook.bulk_load(table=postgres_table, tmp_file=local_filename)
-
-
 def csv_to_postgres():
     #Open Postgres Connection
     pg_hook = PostgresHook(postgres_conn_id='conn_postgress')
