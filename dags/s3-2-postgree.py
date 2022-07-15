@@ -120,7 +120,7 @@ with DAG(
         >> create_table_entity
         >> validate_data
     )
-    validate_data >> [create_table_entity, clear_table, continue_process] >> ingest_data
+    validate_data >> [clear_table, continue_process] >> ingest_data
     ingest_data >> end_workflow
 
     dag.doc_md = __doc__
