@@ -11,12 +11,14 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_s3_bucket_object" "object_movie" {
-  for_each = fileset("./data/", "**")
+  for_each = fileset("/home/leo/LeoBootCamp/data/", "**")
   bucket   = aws_s3_bucket.bucket.id
   key      = each.value
-  source   = "./data/${each.value}"
-  etag     = filemd5("./data/${each.value}")
+  source   = "/home/leo/LeoBootCamp/data/${each.value}"
+  etag     = filemd5("/home/leo/LeoBootCamp/data/${each.value}")
 }
+
+#/home/leo/LeoBootCamp
 #resource "aws_s3_bucket_object" "object_log" {
 #  bucket   = aws_s3_bucket.bucket.id
 #  key      = "log_reviews.csv"

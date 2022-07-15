@@ -64,7 +64,7 @@ db_password = "dbpassword"
 publicly_accessible = false
 
 #### S3 variables ####
-bucket_prefix = "s3-Data-bootcamp-"
+bucket_prefix = "s3-data-bootcamp-leo"
 
 acl = "private"
 
