@@ -36,6 +36,7 @@ def ingest_data_from_s3(
     postgres_table: str,
     aws_conn_id: str = "aws_default",
     postgres_conn_id: str = "postgres_default",
+
 ):
     """Ingest data from an S3 location into a postgres table.
     Args:
@@ -49,6 +50,30 @@ def ingest_data_from_s3(
     psql_hook = PostgresHook(postgres_conn_id)
     local_filename = s3_hook.download_file(key=s3_key, bucket_name=s3_bucket)
     psql_hook.bulk_load(table=postgres_table, tmp_file=local_filename)
+
+
+def csv_to_postgres():
+    #Open Postgres Connection
+    pg_hook = PostgresHook(postgres_conn_id='conn_postgress')
+    get_postgres_conn = PostgresHook(postgres_conn_id='conn_postgress').get_conn()
+    curr = get_postgres_conn.cursor("cursor")
+    # CSV loading to table.
+
+    # Getting the current work directory (cwd)
+    table_dir = os.getcwd()
+    # r=root, d=directories, f=files
+    for r, d, f in os.walk(table_dir):
+        for file in f:
+            if file.endswith("user_purchase.csv"):
+                table_path = os.path.join(r, file)
+
+    print(table_path)
+
+    file = table_path
+    with open(file, 'r') as f:
+        next(f)
+        curr.copy_from(f, 'user_purchase', sep=',')
+        get_postgres_conn.commit()
 
 
 with DAG(
@@ -92,7 +117,7 @@ with DAG(
 
     ingest_data = PythonOperator(
         task_id="ingest_data",
-        python_callable=ingest_data_from_s3,
+        python_callable=csv_to_postgres,
         op_kwargs={
             "aws_conn_id": AWS_CONN_ID,
             "postgres_conn_id": POSTGRES_CONN_ID,
