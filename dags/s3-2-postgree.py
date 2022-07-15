@@ -20,13 +20,14 @@ STABILITY_STATE = "stable"
 CLOUD_PROVIDER = "aws"
 
 # AWS constants
-AWS_CONN_ID = "aws_default"
-S3_BUCKET_NAME = "bootcamp-project-assets"
-S3_KEY_NAME = "datasets/monthly-charts.csv"
+AWS_CONN_ID = "project_s3_conn"
+S3_BUCKET_NAME = "s3-data-bootcamp-leo20220715182015278000000005"
+S3_KEY_NAME = "user_purchase.csv"
 
 # Postgres constants
-POSTGRES_CONN_ID = "ml_conn"
-POSTGRES_TABLE_NAME = "monthly_charts_data"
+POSTGRES_CONN_ID = "project_post_conn"
+POSTGRES_SCHEMA_NAME = "users_purchase_data"
+POSTGRES_TABLE_NAME = "user_purchase"
 
 
 def ingest_data_from_s3(
@@ -69,18 +70,16 @@ with DAG(
         task_id="create_table_entity",
         postgres_conn_id=POSTGRES_CONN_ID,
         sql=f"""
-            CREATE TABLE IF NOT EXISTS {POSTGRES_TABLE_NAME} (
-                month VARCHAR(10),
-                position INTEGER,
-                artist VARCHAR(100),
-                song VARCHAR(100),
-                indicative_revenue NUMERIC,
-                us INTEGER,
-                uk INTEGER,
-                de INTEGER,
-                fr INTEGER,
-                ca INTEGER,
-                au INTEGER
+            CREATE SCHEMA IF NOT EXISTS {POSTGRES_SCHEMA_NAME}
+            CREATE TABLE IF NOT EXISTS {POSTGRES_SCHEMA_NAME}.{POSTGRES_TABLE_NAME} (
+                invoice_number varchar(10),
+                stock_code varchar(20),
+                detail varchar(1000),
+                quantity int,
+                invoice_date timestamp,
+                unit_price numeric(8,3),
+                customer_id int,
+                country varchar(20)
             )
         """,
     )
