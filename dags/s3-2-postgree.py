@@ -115,18 +115,10 @@ with DAG(
     )
     continue_process = DummyOperator(task_id="continue_process")
 
-    ingest_data = PythonOperator(
-        task_id="ingest_data",
-        python_callable=csv_to_postgres,
-        op_kwargs={
-            "aws_conn_id": AWS_CONN_ID,
-            "postgres_conn_id": POSTGRES_CONN_ID,
-            "s3_bucket": S3_BUCKET_NAME,
-            "s3_key": S3_KEY_NAME,
-            "postgres_table": POSTGRES_TABLE_NAME,
-        },
-        trigger_rule=TriggerRule.ONE_SUCCESS,
-    )
+    ingest_data = PythonOperator(task_id='csv_to_database',
+                   provide_context=True,
+                   python_callable=csv_to_postgres,
+                   dag=dag)
 
     validate_data = BranchSQLOperator(
         task_id="validate_data",
