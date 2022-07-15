@@ -70,7 +70,7 @@ with DAG(
         task_id="create_table_entity",
         postgres_conn_id=POSTGRES_CONN_ID,
         sql=f"""
-            CREATE SCHEMA {POSTGRES_SCHEMA_NAME}
+            CREATE SCHEMA {POSTGRES_SCHEMA_NAME};
             CREATE TABLE {POSTGRES_SCHEMA_NAME}.{POSTGRES_TABLE_NAME} (
                 invoice_number varchar(10),
                 stock_code varchar(20),
