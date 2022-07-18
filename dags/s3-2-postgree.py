@@ -1,8 +1,3 @@
-"""Database Ingestion Workflow
-Author: Enrique Olivares <enrique.olivares@wizeline.com>
-Description: Ingests the data from a S3 bucket into a postgres table.
-"""
-
 from airflow.models import DAG
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
@@ -21,7 +16,7 @@ CLOUD_PROVIDER = "aws"
 
 # AWS constants
 AWS_CONN_ID = "project_s3_conn"
-S3_BUCKET_NAME = "s3-data-bootcamp-leo20220715182015278000000005"
+S3_BUCKET_NAME = "s3-data-bootcamp-leo20220718205424993700000005"
 S3_KEY_NAME = "user_purchase.csv"
 
 # Postgres constants
