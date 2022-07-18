@@ -30,27 +30,22 @@ POSTGRES_SCHEMA_NAME = "users_purchase_data"
 POSTGRES_TABLE_NAME = "user_purchase"
 
 
-def csv_to_postgres():
+def csv_to_postgres(
+    s3_bucket: str,
+    s3_key: str,
+    postgres_table: str,
+    aws_conn_id: str = "aws_default",
+    postgres_conn_id: str = "postgres_default",):
     #Open Postgres Connection
-    pg_hook = PostgresHook(postgres_conn_id='conn_postgress')
-    get_postgres_conn = PostgresHook(postgres_conn_id='conn_postgress').get_conn()
-    curr = get_postgres_conn.cursor("cursor")
-    # CSV loading to table.
-
-    # Getting the current work directory (cwd)
-    table_dir = os.getcwd()
-    # r=root, d=directories, f=files
-    for r, d, f in os.walk(table_dir):
-        for file in f:
-            if file.endswith("user_purchase.csv"):
-                table_path = os.path.join(r, file)
-
-    print(table_path)
-
-    file = table_path
-    with open(file, 'r') as f:
-        next(f)
-        curr.copy_from(f, 'user_purchase', sep=',')
+    s3_hook = S3Hook(aws_conn_id=aws_conn_id)
+    local_filename = s3_hook.download_file(key=s3_key, bucket_name=s3_bucket)
+    get_postgres_conn = PostgresHook(postgres_conn_id).get_conn()
+    cur = get_postgres_conn.cursor()
+    with open(local_filename, 'r') as f:
+        reader = csv.reader(f)
+        next(reader)
+        for row in reader:
+            cur.execute("INSERT INTO user_purchase VALUES (%s, %s, %s, %s,%s, %s, %s, %s)", row)
         get_postgres_conn.commit()
 
 
