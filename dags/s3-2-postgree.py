@@ -25,23 +25,35 @@ POSTGRES_SCHEMA_NAME = "users_purchase_data"
 POSTGRES_TABLE_NAME = "user_purchase"
 
 
-def csv_to_postgres(
+def ingest_data_from_s3(
     s3_bucket: str,
     s3_key: str,
     postgres_table: str,
     aws_conn_id: str = "aws_default",
-    postgres_conn_id: str = "postgres_default",):
-    #Open Postgres Connection
+    postgres_conn_id: str = "postgres_default",
+):
+    """Ingest data from an S3 location into a postgres table.
+    Args:
+        s3_bucket (str): Name of the s3 bucket.
+        s3_key (str): Name of the s3 key.
+        postgres_table (str): Name of the postgres table.
+        aws_conn_id (str): Name of the aws connection ID.
+        postgres_conn_id (str): Name of the postgres connection ID.
+    """
     s3_hook = S3Hook(aws_conn_id=aws_conn_id)
+    psql_hook = PostgresHook(postgres_conn_id)
     local_filename = s3_hook.download_file(key=s3_key, bucket_name=s3_bucket)
-    get_postgres_conn = PostgresHook(postgres_conn_id).get_conn()
-    cur = get_postgres_conn.cursor()
-    with open(local_filename, 'r') as f:
-        reader = csv.reader(f)
-        next(reader)
-        for row in reader:
-            cur.execute("INSERT INTO user_purchase VALUES (%s, %s, %s, %s,%s, %s, %s, %s)", row)
-        get_postgres_conn.commit()
+    psql_hook.copy_expert(sql = """COPY user_purchase(
+                invoice_number,
+                stock_code,
+                detail,
+                quantity,
+                invoice_date,
+                unit_price,
+                customer_id,
+                country) 
+                FROM STDIN
+                DELIMITER ',' CSV HEADER;""", filename = local_filename)
 
 
 with DAG(
@@ -83,10 +95,18 @@ with DAG(
     )
     continue_process = DummyOperator(task_id="continue_process")
 
-    ingest_data = PythonOperator(task_id='csv_to_database',
-                   provide_context=True,
-                   python_callable=csv_to_postgres,
-                   dag=dag)
+    ingest_data = PythonOperator(
+        task_id="ingest_data",
+        python_callable=ingest_data_from_s3,
+        op_kwargs={
+            "aws_conn_id": AWS_CONN_ID,
+            "postgres_conn_id": POSTGRES_CONN_ID,
+            "s3_bucket": S3_BUCKET_NAME,
+            "s3_key": S3_KEY_NAME,
+            "postgres_table": POSTGRES_TABLE_NAME,
+        },
+        trigger_rule=TriggerRule.ONE_SUCCESS,
+    )
 
     validate_data = BranchSQLOperator(
         task_id="validate_data",
